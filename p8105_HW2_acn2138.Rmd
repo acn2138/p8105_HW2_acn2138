@@ -1,33 +1,39 @@
 ---
-title: "Simple document"
-output: html_document
+title: "p8105_HW2_acn2138"
+output: github_document
 ---
 
-I'm an R Markdown document! 
+Amanda Nagle's HW 2 
 
-# Section 1
-
-Here's a **code chunk** that samples from 
-a _normal distribution_:
+# Probelm 1
 
 ```{r}
 samp = rnorm(100)
 length(samp)
 ```
 
-# Section 2
+# Problem 2
 
-I can take the mean of the sample, too!
-The mean is `r mean(samp)`.
+Importing and cleaning the subway data. 
 
-THe code chunk below creates a dataframe and generates a plot.
-```{r plot_example}
+```{r}
 
 library(tidyverse)
 
-plot_df= tibble(x = rnorm(500, mean = 2, sd = 4),
-                  y = 3 - 4.2 * x + rnorm(500))
-                  
-ggplot(plot_df,aes(x = x, y = y)) + geom_point()
+subway_data = read_csv(file = "./problem 2 data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv", 
+                       col_types = cols(
+                          Route8 = col_character(),
+                          Route9 = col_character(),
+                          Route10 = col_character(),
+                          Route11 = col_character())) %>%
+  janitor::clean_names()  %>%
+  pivot_longer(route1:route11, names_to = "route_num", names_prefix = "route", values_to = "route_name") %>%
+  select(line, station_name, route_num, route_name, station_latitude, station_longitude, entry, vending, entrance_type, ada) %>%
+  filter(!is.na(route_name))
+
+  
+
+
+  
 
 ```
