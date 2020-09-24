@@ -8,13 +8,16 @@ Amanda Nagle's HW 2
 # Probelm 1
 
 ```{r}
-samp = rnorm(100)
-length(samp)
+
 ```
 
 # Problem 2
 
-Importing and cleaning the subway data. 
+Importing and cleaning the subway data.
+
+First, the data is read in and the route variables are read as characters. 
+Then the variable names are cleaned. Certain columns are kept and entry is changed to a logical variable. 
+
 
 ```{r}
 
@@ -27,13 +30,22 @@ subway_data = read_csv(file = "./problem 2 data/NYC_Transit_Subway_Entrance_And_
                           Route10 = col_character(),
                           Route11 = col_character())) %>%
   janitor::clean_names()  %>%
-  pivot_longer(route1:route11, names_to = "route_num", names_prefix = "route", values_to = "route_name") %>%
-  select(line, station_name, route_num, route_name, station_latitude, station_longitude, entry, vending, entrance_type, ada) %>%
-  filter(!is.na(route_name))
-
-  
-
+  select(line, station_name, route1:route11, station_latitude, station_longitude, entry, vending, entrance_type, ada) %>%
+  mutate(entry = ifelse(entry == "YES", "TRUE", "FALSE"))
 
   
 
 ```
+
+```{R}
+
+```
+The resulting dataset has `r ncol(subway_data)` variables and `r nrow(subway_data) rows`
+
+Next, the route variables are changed from wide format to long format and the extra, uninformative rows are deleted. These were created when each station was given ten rows of possible routes, but most onlty have a few routes passing through them. 
+```{R}
+  subway_longer = subway_data %>% 
+  pivot_longer(route1:route11, names_to = "route_num", names_prefix = "route", values_to = "route_name") %>%
+  filter(!is.na(route_name))
+```
+new number of rows is `r nrow(subway_longer)`.
