@@ -5,7 +5,7 @@ output: github_document
 
 Amanda Nagle's HW 2 
 
-# Probelm 1
+# Problem 1
 
 ```{r}
 
@@ -37,12 +37,25 @@ subway_data = read_csv(file = "./problem 2 data/NYC_Transit_Subway_Entrance_And_
 
 ```
 
+The resulting dataset has `r ncol(subway_data)` variables and `r nrow(subway_data)` rows. These data are not yet tidy.
+
+Answering questions: 
 ```{R}
+answering_question_2_1 = subway_data %>% 
+    distinct(line, station_name, ada)
 
+answering_question_2_2 = answering_question_2_1 %>%
+        summarize(mean(ada))
+
+answering_question_2_3 = subway_data %>%
+      mutate(vending_num = ifelse(vending == "YES", 1, 0)) %>%
+      summarise(mean(vending_num))
 ```
-The resulting dataset has `r ncol(subway_data)` variables and `r nrow(subway_data) rows`
 
-Next, the route variables are changed from wide format to long format and the extra, uninformative rows are deleted. These were created when each station was given ten rows of possible routes, but most onlty have a few routes passing through them. 
+There are `r nrow(answering_question_2_1)` distinct subway stations. `r mean(pull(answering_question_2_1, ada))*100` percent are ADA compliant.
+`r answering_question_2_3*100` percent of entrances have vending access. 
+
+Next, the route variables are changed from wide format to long format and the extra, uninformative rows are deleted. These were created when each station was given ten rows of possible routes, but most only have a few routes passing through them. 
 ```{R}
   subway_longer = subway_data %>% 
   pivot_longer(route1:route11, names_to = "route_num", names_prefix = "route", values_to = "route_name") %>%
