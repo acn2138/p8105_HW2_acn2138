@@ -84,18 +84,20 @@ The resulting dataset has `r ncol(subway_data)` variables and `r nrow(subway_dat
 Answering questions: 
 ```{R}
 answering_question_2_1 = subway_data %>% 
-    distinct(line, station_name, ada)
+    distinct(line, station_name)
 
-answering_question_2_2 = answering_question_2_1 %>%
-        summarize(mean(ada))
+answering_question_2_2 = subway_data %>%
+        filter(ada == TRUE) %>%
+        distinct(line, station_name)
 
 answering_question_2_3 = subway_data %>%
-      mutate(vending_num = ifelse(vending == "YES", 1, 0)) %>%
-      summarise(mean(vending_num))
+      filter(vending == "NO") %>%
+      mutate(entrance_num = ifelse(entry == "TRUE", 1, 0)) %>%
+      summarise(mean(entrance_num))
 ```
 
-There are `r nrow(answering_question_2_1)` distinct subway stations. `r mean(pull(answering_question_2_1, ada))*100` percent are ADA compliant.
-`r answering_question_2_3*100` percent of entrances have vending access. 
+There are `r nrow(answering_question_2_1)` distinct subway stations. `r nrow(answering_question_2_2)`  are ADA compliant.
+`r answering_question_2_3*100` percent of entrance/exits without vending access that allow entrance. 
 
 Next, the route variables are changed from wide format to long format and the extra, uninformative rows are deleted. These were created when each station was given ten rows of possible routes, but most only have a few routes passing through them. 
 ```{R}
@@ -105,6 +107,25 @@ Next, the route variables are changed from wide format to long format and the ex
 ```
 new number of rows is `r nrow(subway_longer)`.
 
+```{R}
+answering_2_4 = subway_longer %>%
+  filter(route_name == "A") %>%
+  distinct(station_name, line)
+
+ansering_2_5 = subway_longer %>%
+  filter(route_name == "A", ada == TRUE) %>%
+  distinct(station_name, line)
+
+
+```
+
+The number of unique stations on the A is ` r nrow(answering_2_4)`.
+
+Of those, ` r nrow(answering_2_5)` are ada compliant.
+
+
+
+
 # Problem 3
 
 Importing and cleaning the fivethirthyeight datasets.
@@ -112,31 +133,35 @@ Importing and cleaning the fivethirthyeight datasets.
 ```{r}
 polls_data = read_csv(file = "./fivethirtyeight_datasets/pols-month.csv") %>% 
             janitor::clean_names() %>%
-            separate(mon, c("year", "month", "day"), sep = "-") %>%
-            mutate(president = ifelse(prez_gop == 1, "gop", "dem" )) %>%
-            mutate(month = as.integer(month), month = as.character(month)) %>%
+            separate(mon, c("year", "month_numz", "day"), sep = "-") %>%
+            mutate(president = ifelse(prez_gop == 1, "gop", "dem")) %>%
             select(-prez_gop, -prez_dem, -day)
             
+month_helper= tibble( month_numz= c("01", "02", "03","04", "05", "06", "07", "08", "09", "10", "11", "12" ), month_name = c("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"), month_num = as.character(1:12))
+
+polls_data= left_join(polls_data, month_helper, by= c("month_numz")) %>%
+            select(-month_num)
+    
 snp_data = read_csv(file = "./fivethirtyeight_datasets/snp.csv", 
                     col_types = cols(date = col_character())) %>% 
             janitor::clean_names() %>%
-            separate(date, c("month", "day", "year"), sep = "/") %>% 
-            relocate(year, month) %>%
+            separate(date, c("month_num", "day", "year"), sep = "/") %>% 
+            relocate(year, month_num) %>%
             select(-day)
+
+snp_data= left_join(snp_data, month_helper, by= c("month_num")) %>%
+            select(-month_numz, -month_num)
             
 unemployment_data = read_csv(file = "./fivethirtyeight_datasets/unemployment.csv") %>% 
             janitor::clean_names() %>%
-            pivot_longer(jan:dec, names_to = "month", values_to = "unemployment") %>%
+            pivot_longer(jan:dec, names_to = "month_name", values_to = "unemployment") %>%
             mutate(year= as.character(year))
 
-most_data= left_join(polls_data, snp_data, by= c("year", "month"))
+most_data= left_join(polls_data, snp_data, by= c("year", "month_name"))
 
-all_data = left_join(most_data, unemployment_data, by = c("year", "month"))
+all_data = left_join(most_data, unemployment_data, by = c("year", "month_name"))
 ```
 The above code imports and cleans datasets containing information on polls and government positions, the SNP 500, and the unemployment rate. Each dataset has one row per month. The datasets had the date variables in different formats, so they were standardized to have month and year in separate columns and for the month variable to be in character form with no preceding zero.
 
 The datasets were merged on year and month to create one dataset with `r nrow(all_data)` rows and `r ncol(all_data)` columns. The years in the dataset range from 1950 to 2015.
 
-```{R}
-
-```
